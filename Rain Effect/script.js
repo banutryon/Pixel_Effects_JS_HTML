@@ -1,17 +1,17 @@
 const myImage = new Image();
-myImage.src = "image1.png";
-
+myImage.src = "tesla2.jpeg";
 myImage.addEventListener("load", function () {
 	const canvas = document.getElementById("canvas1");
 	const ctx = canvas.getContext("2d");
-	canvas.width = 700;
+	canvas.width = 800;
 	canvas.height = 500;
 
 	ctx.drawImage(myImage, 0, 0, canvas.width, canvas.height);
 	const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	// console.log(pixels);
 	let particlesArray = [];
-	const numberOfParticles = 5000;
+	const numberOfParticles = 7000;
 
 	let mappedImage = [];
 	for (let y = 0; y < canvas.height; y++) {
@@ -21,7 +21,10 @@ myImage.addEventListener("load", function () {
 			const green = pixels.data[y * 4 * pixels.width + (x * 4 + 1)];
 			const blue = pixels.data[y * 4 * pixels.width + (x * 4 + 2)];
 			const brightness = calculateRelativeBrightness(red, green, blue);
-			const cell = [(cellBrightness = brightness)];
+			const cell = [
+				(cellBrightness = brightness),
+				(cellColor = "rgb(" + red + "," + green + "," + blue + ")"),
+			];
 			row.push(cell);
 		}
 		mappedImage.push(row);
@@ -39,26 +42,43 @@ myImage.addEventListener("load", function () {
 			this.x = Math.random() * canvas.width;
 			this.y = 0;
 			this.speed = 0;
-			this.velocity = Math.random() * 0.5;
-			this.size = Math.random() * 1.5 + 1;
+			this.velocity = Math.random() * 0.75;
+			this.size = Math.random() * 1.5 + 0.25;
 			this.position1 = Math.floor(this.y);
 			this.position2 = Math.floor(this.x);
 		}
 		update() {
 			this.position1 = Math.floor(this.y);
 			this.position2 = Math.floor(this.x);
-			this.speed = mappedImage[this.position1][this.position2][0];
+			if (
+				mappedImage[this.position1] &&
+				mappedImage[this.position1][this.position2]
+			) {
+				this.speed = mappedImage[this.position1][this.position2][0];
+			}
 			let movement = 2.5 - this.speed + this.velocity;
 
-			this.y += movement;
+			this.y += movement * 2;
+			this.x += movement;
 			if (this.y >= canvas.height) {
 				this.y = 0;
 				this.x = Math.random() * canvas.width;
 			}
+			if (this.x >= canvas.width) {
+				this.x = 0;
+				this.y = Math.random() * canvas.height;
+			}
 		}
 		draw() {
 			ctx.beginPath();
-			ctx.fillStyle = "lightblue";
+			// to change to a solid color
+			// ctx.fillStyle = white;
+			if (
+				mappedImage[this.position1] &&
+				mappedImage[this.position1][this.position2]
+			) {
+				ctx.fillStyle = mappedImage[this.position1][this.position2][1];
+			}
 			ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
 			ctx.fill();
 		}
@@ -70,6 +90,7 @@ myImage.addEventListener("load", function () {
 	}
 	init();
 	function animate() {
+		// add if you want to keep the image.
 		// ctx.drawImage(myImage, 0, 0, canvas.width, canvas.height);
 		ctx.globalAlpha = 0.05;
 		ctx.fillStyle = "rgb(0,0,0)";
